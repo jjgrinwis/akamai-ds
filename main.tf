@@ -53,5 +53,5 @@ resource "akamai_datastream" "my_datastream" {
   collect_midgress    = false
 
   # Akamai TF provider 9.3.0 required to set sampling_percentage, default 100%
-  sampling_percentage = 50
+  sampling_percentage = var.sampling_percentage
 }
