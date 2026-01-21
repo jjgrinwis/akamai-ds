@@ -13,7 +13,7 @@ This Terraform configuration (root module) creates an Akamai DataStream resource
 ## Prerequisites
 
 - [Terraform](https://www.terraform.io/downloads.html) >= 1.0
-- [Akamai Terraform Provider](https://registry.terraform.io/providers/akamai/akamai/latest) >= 9.2.0
+- [Akamai Terraform Provider](https://registry.terraform.io/providers/akamai/akamai/latest) >= 9.3.0
 - Akamai API credentials configured in `~/.edgerc`
 - Access to Akamai properties within your group
 - **DataStream Decoupling feature enabled on your Akamai contract** (required for DataStream-managed integration types)

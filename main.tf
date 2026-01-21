@@ -51,4 +51,7 @@ resource "akamai_datastream" "my_datastream" {
 
   notification_emails = var.notification_emails
   collect_midgress    = false
+
+  # Akamai TF provider 9.3.0 required to set sampling_percentage, default 100%
+  sampling_percentage = 50
 }
