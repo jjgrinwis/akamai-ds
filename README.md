@@ -1,6 +1,6 @@
 # Akamai DataStream Terraform Configuration
 
-This Terraform configuration creates an Akamai DataStream resource that collects data from multiple properties and sends it to a destination using an HTTPS connector. This example uses Vector as the HTTPS endpoint, but DataStream supports multiple destination types.
+This Terraform configuration (root module) creates an Akamai DataStream resource that collects data from multiple properties and sends it to a destination using an HTTPS connector. This example uses Vector as the HTTPS endpoint, but DataStream supports multiple destination types.
 
 ## Features
 
