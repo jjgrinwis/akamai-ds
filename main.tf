@@ -20,13 +20,14 @@ data "akamai_contract" "my_contract" {
 # ============================================
 # Data Source: Property Lookups (Conditional)
 # ============================================
-# Lookup all properties in the group (used when var.property_names is empty)
+# Lookup all properties in the group (only when var.property_names is empty)
 data "akamai_properties" "my_properties" {
+  count       = length(var.property_names) == 0 ? 1 : 0
   contract_id = data.akamai_contract.my_contract.id
   group_id    = data.akamai_contract.my_contract.group_id
 }
 
-# Look up specific property IDs based on property names (used when var.property_names is provided)
+# Look up specific property IDs based on property names (only when var.property_names is provided)
 # Properties should be available in given group otherwise activation will fail.
 data "akamai_property" "properties_by_name" {
   for_each = toset(var.property_names)
@@ -70,7 +71,7 @@ resource "akamai_datastream" "my_datastream" {
   properties = length(var.property_names) > 0 ? [
     for p in values(data.akamai_property.properties_by_name) : tonumber(replace(p.property_id, "prp_", ""))
     ] : [
-    for p in data.akamai_properties.my_properties.properties : tonumber(replace(p.property_id, "prp_", ""))
+    for p in data.akamai_properties.my_properties[0].properties : tonumber(replace(p.property_id, "prp_", ""))
   ]
 
   stream_name = var.stream_name
