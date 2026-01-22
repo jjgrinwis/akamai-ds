@@ -13,7 +13,7 @@ variable "property_names" {
 # ============================================
 
 variable "group_name" {
-  description = "The Akamai Control Center group name where resources will be created. Used to look up contract and group IDs."
+  description = "The Akamai Control Center group name where Datastream resource will be created. Also used to look up properties, contract and group IDs."
   type        = string
   default     = "acc_group"
 }
