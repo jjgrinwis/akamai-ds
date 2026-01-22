@@ -5,9 +5,11 @@ This Terraform configuration (root module) creates an Akamai DataStream resource
 ## Features
 
 - **DataStream Decoupling**: Creates a DataStream independently from the DataStream property behavior
+- **Flexible Property Selection**: Either specify individual properties by name OR automatically include all properties from the group
 - **Dynamic Property Lookup**: Automatically resolves property IDs from property names
 - **Secure Credential Management**: Uses variables for sensitive data instead of hardcoding
 - **HTTPS Connector**: Sends log data to an HTTPS endpoint (Vector example shown) with basic authentication
+- **Configurable Sampling**: Control log sampling percentage (1-100%)
 - **Flexible Destinations**: Configuration can be adapted for other DataStream targets
 
 ## Prerequisites
@@ -20,6 +22,22 @@ This Terraform configuration (root module) creates an Akamai DataStream resource
 
 ## Configuration
 
+### Property Selection Modes
+
+You can configure the datastream to collect from properties in two ways:
+
+**Option 1: Specific Properties** - Specify individual property names:
+
+```terraform
+property_names = ["property1.example.com", "property2.example.com"]
+```
+
+**Option 2: All Properties in Group** - Leave empty to include all properties:
+
+```terraform
+property_names = []
+```
+
 ### Required Variables
 
 Set these variables in `terraform.tfvars` or via environment variables:
@@ -28,14 +46,19 @@ Set these variables in `terraform.tfvars` or via environment variables:
 # Akamai Control Center group name
 group_name = "Your-Group-Name"
 
-# List of property names to include in the datastream
+# List of property names to include (leave empty for all properties in group)
 property_names = ["property1.example.com", "property2.example.com"]
+# OR for all properties:
+# property_names = []
 
 # DataStream name
 stream_name = "vector"
 
 # Notification emails
 notification_emails = ["admin@example.com"]
+
+# Sampling percentage (1-100, default: 100)
+sampling_percentage = 100
 
 # HTTPS connector credentials (use environment variables for production)
 https_username = "your_username"
@@ -86,11 +109,14 @@ terraform destroy
 ## How It Works
 
 1. **Contract Lookup**: The configuration looks up your Akamai contract and group IDs based on the group name
-2. **Property ID Resolution**: Property names are resolved to numeric IDs using the `akamai_property` data source
+2. **Property ID Resolution**:
+   - If `property_names` is provided: specific property names are resolved to numeric IDs using `akamai_property` data source
+   - If `property_names` is empty: all properties in the group are retrieved using `akamai_properties` data source
 3. **DataStream Creation**: A DataStream resource is created with:
    - JSON format delivery
    - 60-second delivery frequency
    - Specified dataset fields (1000, 1002, 1102, 1066)
+   - Configurable sampling percentage (default 100%)
    - HTTPS connector to Vector endpoint with basic authentication (example)
 
 ## Available DataStream Destinations

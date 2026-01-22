@@ -1,3 +1,6 @@
+# ============================================
+# Akamai DataStream Configuration
+# ============================================
 # With the new DataStream Decoupling feature, we can now create a datastream independently from the DataStream property behavior.
 # NOTE: The DataStream Decoupling feature must be enabled on your Akamai contract to create DataStream-managed integration types.
 # This example Terraform configuration demonstrates how to create a datastream that collects data from multiple properties by
@@ -6,17 +9,33 @@
 # This code will create a DataStream-managed integration to send data to a Vector endpoint.
 # https://techdocs.akamai.com/datastream2/v3/docs/integration-types
 
-# first lookup the contract info based on group name as we need contract and group IDs to create the datastream.
+# ============================================
+# Data Source: Contract and Group Lookup
+# ============================================
+# First lookup the contract info based on group name as we need contract and group IDs to create the datastream.
 data "akamai_contract" "my_contract" {
   group_name = var.group_name
 }
 
-# We need to look up property IDs based on property names.
+# ============================================
+# Data Source: Property Lookups (Conditional)
+# ============================================
+# Lookup all properties in the group (used when var.property_names is empty)
+data "akamai_properties" "my_properties" {
+  contract_id = data.akamai_contract.my_contract.id
+  group_id    = data.akamai_contract.my_contract.group_id
+}
+
+# Look up specific property IDs based on property names (used when var.property_names is provided)
 # Properties should be available in given group otherwise activation will fail.
 data "akamai_property" "properties_by_name" {
   for_each = toset(var.property_names)
   name     = each.value
 }
+
+# ============================================
+# Resource: DataStream Configuration
+# ============================================
 
 # Create the datastream using the looked up contract, group, and property IDs.
 # The current datastream provider doesn't support the new "beta" features. However, the existing resource can still be used to create a DataStream-managed datastreams
@@ -25,20 +44,39 @@ data "akamai_property" "properties_by_name" {
 # dataset_fields numbers can be found here: https://techdocs.akamai.com/terraform/docs/set-up-datastream#choose-data-sets
 # Credentials and endpoint for HTTPS connector should be set via variables in terraform.tfvars, TF_VAR environment variables, or secret management.
 resource "akamai_datastream" "my_datastream" {
-  active = false
+  active = false # Set to true to activate the datastream
+
+  # Delivery configuration for JSON format with configurable interval
   delivery_configuration {
     format = "JSON"
     frequency {
-      interval_in_secs = 60
+      interval_in_secs = var.interval_in_secs
     }
   }
+
+  # Reference the contract and group from the lookup
   contract_id = data.akamai_contract.my_contract.id
   group_id    = data.akamai_contract.my_contract.group_id
+
+  # Dataset fields to include in the log data
+  # 1000=Request timestamp, 1002=Client IP, 1102=HTTP status, 1066=Request path
   dataset_fields = [
     1000, 1002, 1102, 1066
   ]
-  properties  = [for p in values(data.akamai_property.properties_by_name) : tonumber(replace(p.property_id, "prp_", ""))]
+
+  # Conditionally select properties:
+  # - If property_names is provided: use specific properties from lookup
+  # - If property_names is empty: use all properties from the group
+  properties = length(var.property_names) > 0 ? [
+    for p in values(data.akamai_property.properties_by_name) : tonumber(replace(p.property_id, "prp_", ""))
+    ] : [
+    for p in data.akamai_properties.my_properties.properties : tonumber(replace(p.property_id, "prp_", ""))
+  ]
+
   stream_name = var.stream_name
+
+  # HTTPS connector configuration (example using Vector)
+  # Other connector types available: S3, Azure, GCS, Splunk, Datadog, Sumo Logic, etc.
   https_connector {
     authentication_type = "BASIC"
     user_name           = var.https_username
@@ -50,8 +88,9 @@ resource "akamai_datastream" "my_datastream" {
   }
 
   notification_emails = var.notification_emails
-  collect_midgress    = false
+  collect_midgress    = false # Set to true to collect midgress (edge to origin) logs
 
-  # Akamai TF provider 9.3.0 required to set sampling_percentage, default 100%
+  # Sampling configuration (Akamai TF provider 9.3.0+ required)
+  # Controls what percentage of logs are sent (1-100%)
   sampling_percentage = var.sampling_percentage
 }
