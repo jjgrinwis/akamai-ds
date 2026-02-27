@@ -61,6 +61,7 @@ resource "akamai_datastream" "my_datastream" {
 
   # Dataset fields to include in the log data
   # 1000=Request timestamp, 1002=Client IP, 1102=HTTP status, 1066=Request path
+  # https://techdocs.akamai.com/terraform/docs/set-up-datastream#choose-data-sets
   dataset_fields = [
     1000, 1002, 1102, 1066
   ]
