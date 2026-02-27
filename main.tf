@@ -79,6 +79,7 @@ resource "akamai_datastream" "my_datastream" {
 
   # HTTPS connector configuration (example using Vector)
   # Other connector types available: S3, Azure, GCS, Splunk, Datadog, Sumo Logic, etc.
+  # https://techdocs.akamai.com/terraform/docs/set-up-datastream#provide-a-destination
   https_connector {
     authentication_type = "BASIC"
     user_name           = var.https_username
